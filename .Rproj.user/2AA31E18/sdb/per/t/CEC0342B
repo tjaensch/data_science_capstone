@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(shiny)\nlibrary(shinyjs)\n\nshinyUI(fluidPage(\n    useShinyjs(),  # Set up shinyjs\n    titlePanel(\"N-Gram Word Prediction\"),\n        mainPanel(\n            textInput('userQuery', 'Enter a word',value = ''),\n            hidden(sliderInput('thresholdPercents', label='Freq.threshold', min = 1, max=100,value = 90)),\n            htmlOutput('prediction')\n        )\n))\n",
+    "created" : 1499114819340.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3593708788",
+    "id" : "CEC0342B",
+    "lastKnownWriteTime" : 1499107793,
+    "last_content_update" : 1499107793,
+    "path" : "~/Desktop/datasciencecoursera/capstone_project/shinyapp/ui.R",
+    "project_path" : "shinyapp/ui.R",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

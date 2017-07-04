@@ -1,0 +1,117 @@
+---
+title: "Milestone Report"
+author: "Thomas Jaensch"
+date: "7/24/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Executive Summary
+
+This is the Milestone Report for week 2 of the Coursera Data Science Capstone project. The goal of the capstone project is to create a predictive text model using a large text corpus of documents as training data. Natural language processing techniques will be used to perform the analysis. The milestone report describes the major features of the training data using exploratory data analysis techniques and summarizes futures steps for a predictive model.
+
+## Getting data and exploratory analysis
+
+```{r echo = TRUE}
+library(stringi)
+
+blogs <- readLines("/Users/thomasjaensch/Downloads/final/en_us/en_US.blogs.txt", encoding = "UTF-8", skipNul = TRUE)
+news <- readLines("/Users/thomasjaensch/Downloads/final/en_us/en_US.news.txt", encoding = "UTF-8", skipNul = TRUE)
+twitter <- readLines("/Users/thomasjaensch/Downloads/final/en_us/en_US.twitter.txt", encoding = "UTF-8", skipNul = TRUE)
+
+## File sizes in MB
+blogs.size <- file.info("final/en_us/en_US.blogs.txt")$size / 1024 ^ 2
+news.size <- file.info("final/en_us/en_US.news.txt")$size / 1024 ^ 2
+twitter.size <- file.info("final/en_us/en_US.twitter.txt")$size / 1024 ^ 2
+
+# Number words in files
+blogs.words <- stri_count_words(blogs)
+news.words <- stri_count_words(news)
+twitter.words <- stri_count_words(twitter)
+
+# Summary data frame
+data.frame(source = c("blogs", "news", "twitter"),
+           file.size.MB = c(blogs.size, news.size, twitter.size),
+           num.lines = c(length(blogs), length(news), length(twitter)),
+           num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)),
+           mean.num.words = c(mean(blogs.words), mean(news.words), mean(twitter.words)))
+```
+
+## Subsetting (8%) data for analysis
+
+```{r echo=TRUE}
+data.sample <- c(sample(blogs, length(blogs) * 0.0008),
+                 sample(news, length(news) * 0.0008),
+                 sample(twitter, length(twitter) * 0.0008))
+```
+
+## Creating the corpus
+
+```{r echo=TRUE}
+library(tm)
+corpus <- VCorpus(VectorSource(data.sample))
+```
+
+## Normalizing the data
+
+```{r echo=TRUE}
+corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, removeWords, stopwords("en"))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removeWords, c("the","and","for","that","you","with","this","was","but","have"))
+```
+## Word cloud to see most frequent words in corpus
+```{r echo=FALSE}
+library(wordcloud)
+wordcloud(corpus,min.freq = 35,random.order = FALSE, colors = brewer.pal(8,"Dark2"))
+```
+
+## Tokenize sample into unigrams, bigrams and trigrams
+```{r echo=TRUE}
+BigramTokenizer <-
+  function(x)
+    unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
+TrigramTokenizer <-
+  function(x)
+    unlist(lapply(ngrams(words(x), 3), paste, collapse = " "), use.names = FALSE)
+freq_words <- function(tdm){
+  freq <- sort(rowSums(as.matrix(tdm)), decreasing=TRUE)
+  freq_df <- data.frame(word=names(freq), freq=freq)
+  return(freq_df)
+}
+unigram <- removeSparseTerms(TermDocumentMatrix(corpus), 0.9999)
+unigram_freq <- freq_words(unigram)
+
+bigram <- removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = BigramTokenizer)), 0.9999)
+bigram_freq <- freq_words(bigram)
+
+trigram <- removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = TrigramTokenizer)), 0.9999)
+trigram_freq <- freq_words(trigram)
+```
+
+## Plots
+
+```{r echo=TRUE}
+library(ggplot2)
+freq_plot <- function(data, title) {
+  ggplot(data[1:40,], aes(reorder(word, -freq), freq)) +
+         labs(x = "Words", y = "Frequency") +
+         ggtitle(title) +
+         theme(axis.text.x = element_text(angle = 90, size = 12, hjust = 1)) +
+         geom_bar(stat = "identity")
+}
+freq_plot(unigram_freq, "Top 40 Unigrams")
+freq_plot(bigram_freq, "Top 40 Bigrams")
+freq_plot(trigram_freq, "Top 40 Trigrams")
+```
+
+## Conclusion and next steps
+
+The dataset is too large to consider all the data for processing and most likely would crash any single computer due to lack of memory, that's why only a subset can be used for analysis. Next will be to find and build a predictive algorithm, and finally turn the project into a shiny app and deploy it.
+

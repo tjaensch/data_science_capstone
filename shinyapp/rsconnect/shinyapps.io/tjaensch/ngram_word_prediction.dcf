@@ -1,0 +1,10 @@
+name: ngram_word_prediction
+title: ngram_word_prediction
+account: tjaensch
+server: shinyapps.io
+appId: 194004
+bundleId: 890461
+url: https://tjaensch.shinyapps.io/ngram_word_prediction/
+when: 1499107028.31022
+asMultiple: FALSE
+asStatic: FALSE
